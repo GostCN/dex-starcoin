@@ -23,14 +23,13 @@ module DEXScripts {
     }
 
     //account or manager transfer : across chain
-    public(script) fun transfer<DexToken: store>(account: signer, user_address: address, amount: u128) {
-        DEXStarCoin::transfer<DexToken>(&account, user_address, amount);
+    public(script) fun transfer<DexToken: store>(account: signer, user_address: address, amount: u128, withdrawalId: u128) {
+        DEXStarCoin::transfer<DexToken>(&account, user_address, amount, withdrawalId);
     }
 
     //account or manager withdrawal : current chain
-    public(script) fun withdrawal<DexToken: store>(account: signer, user_address: address, amount: u128) {
-        DEXStarCoin::withdrawal<DexToken>(&account, user_address, amount);
+    public(script) fun withdrawal<DexToken: store>(account: signer, user_address: address, amount: u128, withdrawalId: u128) {
+        DEXStarCoin::withdrawal<DexToken>(&account, user_address, amount, withdrawalId);
     }
-
 }
 }

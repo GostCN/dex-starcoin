@@ -62,6 +62,7 @@ module DEXStarCoin {
         from: address,
         //target user address
         to: address,
+        withdrawalId: u128,
         token_code: Token::TokenCode,
         amount: u128,
         time: u64,
@@ -73,6 +74,7 @@ module DEXStarCoin {
         from: address,
         //target user address
         to: address,
+        withdrawalId: u128,
         token_code: Token::TokenCode,
         amount: u128,
         time: u64,
@@ -86,23 +88,22 @@ module DEXStarCoin {
         assert(DEX_STARCOIN_ADDRESS == account_address, PERMISSION_DENIED);
 
         // init dex starcoin pool
-        if(!exists<DexStarcoinPool<DexToken>>(account_address)){
+        if (!exists<DexStarcoinPool<DexToken>>(account_address)) {
             move_to(account, DexStarcoinPool<DexToken> {
                 tokens: Token::zero(),
                 deposit_event: Event::new_event_handle<DexDepositEvent>(account),
                 withdrawal_event: Event::new_event_handle<DexWithdrawalEvent>(account),
                 transfer_event: Event::new_event_handle<DexTransferEvent>(account),
             });
-        }; 
+        };
 
         // init manager list
-        if(!exists<ManagerList>(account_address)){
+        if (!exists<ManagerList>(account_address)) {
             move_to(account, ManagerList {
                 managers: Vector::empty(),
                 manager_change_event: Event::new_event_handle<ManagerChangeEvent>(account),
             });
         };
-
     }
 
     //add a new manager
@@ -110,13 +111,13 @@ module DEXStarCoin {
         //Permission check
         let account_address = Signer::address_of(account);
         assert(DEX_STARCOIN_ADDRESS == account_address, PERMISSION_DENIED);
-    
+
         assert(exists<ManagerList>(DEX_STARCOIN_ADDRESS), MANAGER_NOT_EXIST);
 
         let manager_list = borrow_global_mut<ManagerList>(DEX_STARCOIN_ADDRESS);
         let has_exist = false;
         let len = Vector::length(&manager_list.managers);
-        if(len > 0) {
+        if (len > 0) {
             let manager_tmp = Vector::borrow_mut(&mut manager_list.managers, 0);
             let k = 0;
             while (k < len) {
@@ -124,7 +125,7 @@ module DEXStarCoin {
                     has_exist = true;
                     break
                 };
-                if((k + 1) == len){
+                if ((k + 1) == len) {
                     break
                 };
                 k = k + 1;
@@ -132,7 +133,7 @@ module DEXStarCoin {
             };
         };
 
-        if(!has_exist) {
+        if (!has_exist) {
             Vector::push_back(&mut manager_list.managers, user_address);
             Event::emit_event(
                 &mut manager_list.manager_change_event,
@@ -144,7 +145,6 @@ module DEXStarCoin {
                 }
             );
         };
-
     }
 
     //delete a manager
@@ -159,14 +159,14 @@ module DEXStarCoin {
         let len = Vector::length(&manager_list.managers);
         let has_exist = false;
         let k = 0;
-        if(len > 0) {
+        if (len > 0) {
             let manager_tmp = Vector::borrow_mut(&mut manager_list.managers, 0);
             while (k < len) {
                 if (user_address == *manager_tmp) {
                     has_exist = true;
                     break
                 };
-                if((k + 1) == len){
+                if ((k + 1) == len) {
                     break
                 };
                 k = k + 1;
@@ -174,7 +174,7 @@ module DEXStarCoin {
             };
         };
 
-        if(has_exist){
+        if (has_exist) {
             let _ = Vector::remove<address>(&mut manager_list.managers, k);
             Event::emit_event(
                 &mut manager_list.manager_change_event,
@@ -186,7 +186,6 @@ module DEXStarCoin {
                 }
             );
         };
-
     }
 
     //user deposit
@@ -194,7 +193,7 @@ module DEXStarCoin {
         //check
         assert(amount > 0, AMOUNT_INVALID);
         assert(exists<DexStarcoinPool<DexToken>>(DEX_STARCOIN_ADDRESS), DEX_POOL_NOT_EXIST);
-        
+
         let dex_token_pool = borrow_global_mut<DexStarcoinPool<DexToken>>(DEX_STARCOIN_ADDRESS);
         let deposit_token = Account::withdraw<DexToken>(user, amount);
         Token::deposit<DexToken>(&mut dex_token_pool.tokens, deposit_token);
@@ -213,11 +212,10 @@ module DEXStarCoin {
                 time: Timestamp::now_milliseconds(),
             }
         );
-
     }
 
     //account or manager transfer : across chain
-    public fun transfer<DexToken: store>(account: &signer, user_address: address, amount: u128) acquires DexStarcoinPool, ManagerList {
+    public fun transfer<DexToken: store>(account: &signer, user_address: address, amount: u128, withdrawalId: u128) acquires DexStarcoinPool, ManagerList {
         let account_address = Signer::address_of(account);
         //check and transfer 
         predicate_withdrawal<DexToken>(account_address, user_address, amount);
@@ -231,16 +229,16 @@ module DEXStarCoin {
                 from: account_address,
                 //target user address
                 to: user_address,
+                withdrawalId: withdrawalId,
                 token_code: Token::token_code<DexToken>(),
                 amount: amount,
                 time: Timestamp::now_milliseconds(),
             }
         );
-
     }
 
     //account or manager withdrawal : current chain
-    public fun withdrawal<DexToken: store>(account: &signer, user_address: address, amount: u128) acquires DexStarcoinPool, ManagerList {
+    public fun withdrawal<DexToken: store>(account: &signer, user_address: address, amount: u128, withdrawalId: u128) acquires DexStarcoinPool, ManagerList {
         let account_address = Signer::address_of(account);
         //check and withdrawal
         predicate_withdrawal<DexToken>(account_address, user_address, amount);
@@ -254,12 +252,12 @@ module DEXStarCoin {
                 from: account_address,
                 //target user address
                 to: user_address,
+                withdrawalId: withdrawalId,
                 token_code: Token::token_code<DexToken>(),
                 amount: amount,
                 time: Timestamp::now_milliseconds(),
             }
         );
-
     }
 
     //predicate and transfer/withdrawal
@@ -271,18 +269,18 @@ module DEXStarCoin {
         let has_dex_account = DEX_STARCOIN_ADDRESS == account_address;
 
         let has_manager_account = false;
-        if(exists<ManagerList>(DEX_STARCOIN_ADDRESS)) {
+        if (exists<ManagerList>(DEX_STARCOIN_ADDRESS)) {
             let manager_list = borrow_global_mut<ManagerList>(DEX_STARCOIN_ADDRESS);
             let len = Vector::length(&manager_list.managers);
             let k = 0;
-            if(len > 0) {
+            if (len > 0) {
                 let manager_tmp = Vector::borrow_mut(&mut manager_list.managers, 0);
                 while (k < len) {
                     if (account_address == *manager_tmp) {
                         has_manager_account = true;
                         break
                     };
-                    if((k + 1) == len){
+                    if ((k + 1) == len) {
                         break
                     };
                     k = k + 1;
@@ -302,8 +300,6 @@ module DEXStarCoin {
 
         let withdrawal_token = Token::withdraw<DexToken>(&mut dex_token_pool.tokens, amount);
         Account::deposit<DexToken>(user_address, withdrawal_token);
-
     }
-
 }
 }

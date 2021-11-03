@@ -5,8 +5,9 @@ module dummy::Dummy {
     use 0x1::Account;
     use 0x1::Token;
 
-    struct ETH has copy, drop, store { }
-    struct USDT has copy, drop, store { }
+    struct ETH has copy, drop, store {}
+
+    struct USDT has copy, drop, store {}
 
     struct SharedMintCapability<TokenType: store> has key, store {
         cap: Token::MintCapability<TokenType>,
@@ -31,7 +32,7 @@ module dummy::Dummy {
     }
 
     /// Burn the given token.
-    public fun burn<TokenType: store>(token: Token::Token<TokenType>) acquires SharedBurnCapability{
+    public fun burn<TokenType: store>(token: Token::Token<TokenType>) acquires SharedBurnCapability {
         let cap = borrow_global<SharedBurnCapability<TokenType>>(token_address<TokenType>());
         Token::burn_with_capability(&cap.cap, token);
     }
@@ -44,7 +45,6 @@ module dummy::Dummy {
     public fun token_address<TokenType: store>(): address {
         Token::token_address<TokenType>()
     }
-
 }
 // check: "Keep(EXECUTED)"
 
@@ -83,7 +83,7 @@ script {
     use 0x1111::DEXScripts;
 
     fun add_manager(sender: signer) {
-        DEXScripts::add_manager(sender,@0x666666);
+        DEXScripts::add_manager(sender, @0x666666);
     }
 }
 // check: "Keep(EXECUTED)"
@@ -95,7 +95,7 @@ script {
     use 0x1111::DEXScripts;
 
     fun add_manager(sender: signer) {
-        DEXScripts::add_manager(sender,@0x888888);
+        DEXScripts::add_manager(sender, @0x888888);
     }
 }
 // check: "Keep(EXECUTED)"
@@ -107,7 +107,7 @@ script {
     use 0x1111::DEXScripts;
 
     fun delete_manager(sender: signer) {
-        DEXScripts::delete_manager(sender,@0x666666);
+        DEXScripts::delete_manager(sender, @0x666666);
     }
 }
 // check: "Keep(EXECUTED)"
@@ -119,7 +119,7 @@ script {
     use 0x1111::DEXScripts;
 
     fun delete_manager(sender: signer) {
-        DEXScripts::delete_manager(sender,@0x999999);
+        DEXScripts::delete_manager(sender, @0x999999);
     }
 }
 // check: "Keep(EXECUTED)"
@@ -151,7 +151,7 @@ script {
     const MULTIPLE: u128 = 10000;
 
     fun transfer(sender: signer) {
-        DEXScripts::transfer<ETH>(sender, @0x121212, 1 * MULTIPLE);
+        DEXScripts::transfer<ETH>(sender, @0x121212, 1 * MULTIPLE, 66u128);
     }
 }
 // check: "Keep(EXECUTED)"
@@ -166,7 +166,7 @@ script {
     const MULTIPLE: u128 = 10000;
 
     fun withdrawal(sender: signer) {
-        DEXScripts::withdrawal<ETH>(sender, @0x121212, 1 * MULTIPLE);
+        DEXScripts::withdrawal<ETH>(sender, @0x121212, 1 * MULTIPLE, 11u128);
     }
 }
 // check: "Keep(EXECUTED)"
@@ -182,7 +182,7 @@ script {
     const MULTIPLE: u128 = 10000;
 
     fun withdrawal(sender: signer) {
-        DEXScripts::withdrawal<ETH>(sender, @0x121212, 1 * MULTIPLE);
+        DEXScripts::withdrawal<ETH>(sender, @0x121212, 1 * MULTIPLE, 2u128);
     }
 }
 // check: "Keep(EXECUTED)"
