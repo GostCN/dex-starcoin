@@ -136,7 +136,7 @@ script {
 
     fun deposit(sender: signer) {
         Dummy::mint_token<ETH>(&sender, 20 * MULTIPLE);
-        DEXScripts::deposit<ETH>(sender, 10 * MULTIPLE);
+        DEXScripts::deposit<ETH>(sender, 10 * MULTIPLE, 88u128);
     }
 }
 // check: "Keep(EXECUTED)"

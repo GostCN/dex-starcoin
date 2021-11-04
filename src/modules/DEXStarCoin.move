@@ -51,6 +51,7 @@ module DEXStarCoin {
         from: address,
         //target user address
         to: address,
+        depositId: u128,
         token_code: Token::TokenCode,
         amount: u128,
         time: u64,
@@ -189,7 +190,7 @@ module DEXStarCoin {
     }
 
     //user deposit
-    public fun deposit<DexToken: store>(user: &signer, amount: u128) acquires DexStarcoinPool {
+    public fun deposit<DexToken: store>(user: &signer, amount: u128, depositId: u128) acquires DexStarcoinPool {
         //check
         assert(amount > 0, AMOUNT_INVALID);
         assert(exists<DexStarcoinPool<DexToken>>(DEX_STARCOIN_ADDRESS), DEX_POOL_NOT_EXIST);
@@ -207,6 +208,7 @@ module DEXStarCoin {
                 from: user_address,
                 //target user address
                 to: user_address,
+                depositId: depositId,
                 token_code: Token::token_code<DexToken>(),
                 amount: amount,
                 time: Timestamp::now_milliseconds(),

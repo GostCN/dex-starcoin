@@ -18,8 +18,8 @@ module DEXScripts {
     }
 
     //user deposit
-    public(script) fun deposit<DexToken: store>(user: signer, amount: u128) {
-        DEXStarCoin::deposit<DexToken>(&user, amount);
+    public(script) fun deposit<DexToken: store>(user: signer, amount: u128, depositId: u128) {
+        DEXStarCoin::deposit<DexToken>(&user, amount, depositId);
     }
 
     //account or manager transfer : across chain
